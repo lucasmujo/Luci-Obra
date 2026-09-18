@@ -382,7 +382,7 @@
 
                 <div class="button-group">
                     <button class="btn btn-secondary" onclick="app.abrirCamera()">📷 Foto NF</button>
-                    <button class="btn btn-secondary" onclick="app.abrirAudio()">🎤 Áudio</button>
+                    <button class="btn btn-secondary" id="btn-audio" onclick="app.toggleGravacaoAudio()">🎤 Gravar Áudio</button>
                 </div>
 
                 <div id="media-container"></div>
@@ -451,13 +451,16 @@
     </div>
 
     <input type="file" id="file-camera" accept="image/*" capture="camera" style="display: none;">
-    <input type="file" id="file-audio" accept="audio/*" style="display: none;">
 
     <script>
         const app = {
             gastos: [],
             categoriaAtual: null,
             mediaAtual: null,
+            gravando: false,
+            mediaRecorder: null,
+            audioChunks: [],
+            audioStream: null,
 
             init() {
                 this.carregarDados();
@@ -492,17 +495,6 @@
                     }
                 });
 
-                document.getElementById('file-audio').addEventListener('change', (e) => {
-                    const file = e.target.files[0];
-                    if (file) {
-                        const reader = new FileReader();
-                        reader.onload = (event) => {
-                            this.mediaAtual = { tipo: 'audio', dados: event.target.result };
-                            this.exibirPreview();
-                        };
-                        reader.readAsDataURL(file);
-                    }
-                });
             },
 
             setDataHoje() {
@@ -514,8 +506,57 @@
                 document.getElementById('file-camera').click();
             },
 
-            abrirAudio() {
-                document.getElementById('file-audio').click();
+            async toggleGravacaoAudio() {
+                if (!this.gravando) {
+                    await this.iniciarGravacao();
+                } else {
+                    this.pararGravacao();
+                }
+            },
+
+            async iniciarGravacao() {
+                if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+                    alert('Seu navegador não permite gravar áudio. Atualize o Chrome e tente de novo.');
+                    return;
+                }
+                try {
+                    this.audioStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                    this.audioChunks = [];
+                    this.mediaRecorder = new MediaRecorder(this.audioStream);
+
+                    this.mediaRecorder.ondataavailable = (e) => {
+                        if (e.data.size > 0) this.audioChunks.push(e.data);
+                    };
+
+                    this.mediaRecorder.onstop = () => {
+                        const blob = new Blob(this.audioChunks, { type: 'audio/webm' });
+                        const reader = new FileReader();
+                        reader.onload = (event) => {
+                            this.mediaAtual = { tipo: 'audio', dados: event.target.result };
+                            this.exibirPreview();
+                        };
+                        reader.readAsDataURL(blob);
+                        this.audioStream.getTracks().forEach(track => track.stop());
+                    };
+
+                    this.mediaRecorder.start();
+                    this.gravando = true;
+                    const btn = document.getElementById('btn-audio');
+                    btn.textContent = '⏹ Parar Gravação';
+                    btn.classList.add('btn-danger');
+                } catch (err) {
+                    alert('Não foi possível acessar o microfone. Verifique se o Chrome tem permissão de microfone pra esse site (nas configurações do navegador).');
+                }
+            },
+
+            pararGravacao() {
+                if (this.mediaRecorder && this.gravando) {
+                    this.mediaRecorder.stop();
+                    this.gravando = false;
+                    const btn = document.getElementById('btn-audio');
+                    btn.textContent = '🎤 Gravar Áudio';
+                    btn.classList.remove('btn-danger');
+                }
             },
 
             exibirPreview() {
