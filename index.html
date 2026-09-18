@@ -1,0 +1,686 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#1F4E78">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Luci Obra">
+    <title>Luci - Controle de Obra</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: #f5f5f5;
+            color: #333;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            padding-bottom: 80px;
+        }
+
+        header {
+            background: linear-gradient(135deg, #1F4E78 0%, #2d5fa3 100%);
+            color: white;
+            padding: 20px;
+            text-align: center;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        header h1 {
+            font-size: 24px;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        header p {
+            font-size: 13px;
+            opacity: 0.9;
+        }
+
+        .section {
+            background: white;
+            margin: 12px;
+            border-radius: 8px;
+            padding: 16px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+        }
+
+        .section-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: #1F4E78;
+            margin-bottom: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .form-group {
+            margin-bottom: 14px;
+        }
+
+        label {
+            display: block;
+            font-size: 13px;
+            font-weight: 500;
+            margin-bottom: 6px;
+            color: #555;
+        }
+
+        input, select, textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 14px;
+            font-family: inherit;
+        }
+
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: #1F4E78;
+            box-shadow: 0 0 0 3px rgba(31, 78, 120, 0.1);
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 60px;
+        }
+
+        .button-group {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-top: 14px;
+        }
+
+        .btn {
+            padding: 12px 16px;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .btn-primary {
+            background: #1F4E78;
+            color: white;
+            grid-column: 1 / -1;
+        }
+
+        .btn-primary:active {
+            background: #163a5c;
+            transform: scale(0.98);
+        }
+
+        .btn-secondary {
+            background: #f0f0f0;
+            color: #333;
+        }
+
+        .btn-secondary:active {
+            background: #e0e0e0;
+            transform: scale(0.98);
+        }
+
+        .btn-danger {
+            background: #dc3545;
+            color: white;
+        }
+
+        .btn-danger:active {
+            background: #bb2d3b;
+            transform: scale(0.98);
+        }
+
+        .media-preview {
+            margin-top: 10px;
+            padding: 10px;
+            background: #f9f9f9;
+            border-radius: 6px;
+            text-align: center;
+        }
+
+        .media-preview img {
+            max-width: 100%;
+            max-height: 200px;
+            border-radius: 4px;
+        }
+
+        .media-preview audio {
+            width: 100%;
+            margin-top: 8px;
+        }
+
+        .list-item {
+            background: #f9f9f9;
+            padding: 12px;
+            border-radius: 6px;
+            margin-bottom: 10px;
+            border-left: 4px solid #1F4E78;
+        }
+
+        .list-item-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 8px;
+        }
+
+        .list-item-title {
+            font-weight: 600;
+            color: #1F4E78;
+            flex: 1;
+        }
+
+        .list-item-value {
+            font-size: 16px;
+            font-weight: 700;
+            color: #27ae60;
+        }
+
+        .list-item-meta {
+            font-size: 12px;
+            color: #999;
+            margin-top: 4px;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: #999;
+        }
+
+        .empty-state-icon {
+            font-size: 48px;
+            margin-bottom: 12px;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 16px;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, #1F4E78 0%, #2d5fa3 100%);
+            color: white;
+            padding: 16px;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            opacity: 0.9;
+            margin-bottom: 4px;
+        }
+
+        .stat-value {
+            font-size: 24px;
+            font-weight: 700;
+        }
+
+        .action-bar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: white;
+            border-top: 1px solid #ddd;
+            padding: 12px;
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 8px;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .action-bar .btn {
+            margin: 0;
+            padding: 10px 12px;
+            font-size: 12px;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 100px;
+            left: 12px;
+            right: 12px;
+            max-width: 576px;
+            margin: 0 auto;
+            padding: 12px 16px;
+            background: #27ae60;
+            color: white;
+            border-radius: 6px;
+            animation: slideUp 0.3s ease;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+        }
+
+        .toast.error {
+            background: #dc3545;
+        }
+
+        @keyframes slideUp {
+            from {
+                transform: translateY(100px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .category-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 8px;
+        }
+
+        .category-btn {
+            padding: 10px;
+            border: 2px solid #ddd;
+            background: white;
+            border-radius: 6px;
+            cursor: pointer;
+            text-align: center;
+            font-size: 13px;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+
+        .category-btn.selected {
+            border-color: #1F4E78;
+            background: #f0f4ff;
+            color: #1F4E78;
+        }
+
+        .sync-status {
+            font-size: 12px;
+            color: #999;
+            text-align: center;
+            margin-top: 8px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Luci Estúdio</h1>
+            <p>Controle de Gastos da Obra</p>
+        </header>
+
+        <!-- TAB 1: NOVO GASTO -->
+        <div id="tab-novo" class="tab-content active">
+            <div class="section">
+                <div class="section-title">Novo Gasto</div>
+
+                <div class="form-group">
+                    <label>Data</label>
+                    <input type="date" id="data" required>
+                </div>
+
+                <div class="form-group">
+                    <label>Categoria</label>
+                    <div class="category-grid">
+                        <button class="category-btn" data-category="Reforma/Estrutura">📐 Reforma</button>
+                        <button class="category-btn" data-category="Equipamentos">🔧 Equipamentos</button>
+                        <button class="category-btn" data-category="Móveis/Decoração">🪑 Móveis</button>
+                        <button class="category-btn" data-category="Supplies Iniciais">📦 Supplies</button>
+                        <button class="category-btn" data-category="Marketing Inicial">📢 Marketing</button>
+                        <button class="category-btn" data-category="Outros">📌 Outros</button>
+                    </div>
+                    <input type="hidden" id="categoria" required>
+                </div>
+
+                <div class="form-group">
+                    <label>Descrição</label>
+                    <textarea id="descricao" placeholder="Ex: Pintura das paredes da sala" required></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label>Valor (R$)</label>
+                    <input type="number" id="valor" placeholder="0.00" step="0.01" min="0" required>
+                </div>
+
+                <div class="form-group">
+                    <label>Fornecedor</label>
+                    <input type="text" id="fornecedor" placeholder="Ex: Pintor João">
+                </div>
+
+                <div class="form-group">
+                    <label>Status</label>
+                    <select id="status">
+                        <option value="Pago">Pago</option>
+                        <option value="Pendente">Pendente</option>
+                    </select>
+                </div>
+
+                <div class="button-group">
+                    <button class="btn btn-secondary" onclick="app.abrirCamera()">📷 Foto NF</button>
+                    <button class="btn btn-secondary" onclick="app.abrirAudio()">🎤 Áudio</button>
+                </div>
+
+                <div id="media-container"></div>
+
+                <button class="btn btn-primary" onclick="app.salvarGasto()" style="margin-top: 14px;">Salvar Gasto</button>
+            </div>
+        </div>
+
+        <!-- TAB 2: GASTOS -->
+        <div id="tab-gastos" class="tab-content">
+            <div class="section">
+                <div class="section-title">Resumo</div>
+                <div class="stats">
+                    <div class="stat-card">
+                        <div class="stat-label">Total Gasto</div>
+                        <div class="stat-value" id="total-gasto">R$ 0,00</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Qtd. Gastos</div>
+                        <div class="stat-value" id="qtd-gastos">0</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="section">
+                <div class="section-title">Últimos Gastos</div>
+                <div id="lista-gastos">
+                    <div class="empty-state">
+                        <div class="empty-state-icon">📋</div>
+                        <p>Nenhum gasto registrado ainda</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB 3: SINCRONIZAÇÃO -->
+        <div id="tab-sync" class="tab-content">
+            <div class="section">
+                <div class="section-title">Sincronizar com Google Sheets</div>
+
+                <div class="form-group">
+                    <label>Link do Google Sheets</label>
+                    <input type="text" id="sheets-url" placeholder="Copie o link do seu Google Sheets aqui">
+                    <small style="display: block; margin-top: 6px; color: #999;">Cole o link compartilhado da sua planilha de controle</small>
+                </div>
+
+                <button class="btn btn-primary" onclick="app.sincronizar()">Sincronizar Agora</button>
+                <div class="sync-status" id="sync-status"></div>
+
+                <hr style="margin: 20px 0; border: none; border-top: 1px solid #eee;">
+
+                <div class="form-group">
+                    <label>Gerenciar Dados Locais</label>
+                    <button class="btn btn-danger" onclick="app.exportarCSV()" style="margin-bottom: 8px;">Exportar como CSV</button>
+                    <button class="btn btn-danger" onclick="app.limparDados()">Limpar Tudo</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ACTION BAR -->
+    <div class="action-bar">
+        <button class="btn" onclick="app.mudarTab('tab-novo')" id="btn-novo">➕ Novo</button>
+        <button class="btn" onclick="app.mudarTab('tab-gastos')" id="btn-gastos">📊 Gastos</button>
+        <button class="btn" onclick="app.mudarTab('tab-sync')" id="btn-sync">☁️ Sync</button>
+    </div>
+
+    <input type="file" id="file-camera" accept="image/*" capture="camera" style="display: none;">
+    <input type="file" id="file-audio" accept="audio/*" style="display: none;">
+
+    <script>
+        const app = {
+            gastos: [],
+            categoriaAtual: null,
+            mediaAtual: null,
+
+            init() {
+                this.carregarDados();
+                this.setDataHoje();
+                this.configurarEventos();
+                this.atualizarUI();
+
+                if ('serviceWorker' in navigator) {
+                    navigator.serviceWorker.register('data:application/javascript,self.addEventListener("install",e=>self.skipWaiting());self.addEventListener("activate",e=>self.clients.claim());').catch(() => {});
+                }
+            },
+
+            configurarEventos() {
+                document.querySelectorAll('.category-btn').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        document.querySelectorAll('.category-btn').forEach(b => b.classList.remove('selected'));
+                        e.target.classList.add('selected');
+                        this.categoriaAtual = e.target.dataset.category;
+                        document.getElementById('categoria').value = this.categoriaAtual;
+                    });
+                });
+
+                document.getElementById('file-camera').addEventListener('change', (e) => {
+                    const file = e.target.files[0];
+                    if (file) {
+                        const reader = new FileReader();
+                        reader.onload = (event) => {
+                            this.mediaAtual = { tipo: 'foto', dados: event.target.result };
+                            this.exibirPreview();
+                        };
+                        reader.readAsDataURL(file);
+                    }
+                });
+
+                document.getElementById('file-audio').addEventListener('change', (e) => {
+                    const file = e.target.files[0];
+                    if (file) {
+                        const reader = new FileReader();
+                        reader.onload = (event) => {
+                            this.mediaAtual = { tipo: 'audio', dados: event.target.result };
+                            this.exibirPreview();
+                        };
+                        reader.readAsDataURL(file);
+                    }
+                });
+            },
+
+            setDataHoje() {
+                const hoje = new Date().toISOString().split('T')[0];
+                document.getElementById('data').value = hoje;
+            },
+
+            abrirCamera() {
+                document.getElementById('file-camera').click();
+            },
+
+            abrirAudio() {
+                document.getElementById('file-audio').click();
+            },
+
+            exibirPreview() {
+                const container = document.getElementById('media-container');
+                container.innerHTML = '';
+
+                if (this.mediaAtual) {
+                    const div = document.createElement('div');
+                    div.className = 'media-preview';
+
+                    if (this.mediaAtual.tipo === 'foto') {
+                        div.innerHTML = `<img src="${this.mediaAtual.dados}" alt="Preview"><br><button class="btn btn-secondary" onclick="app.removerMedia()" style="width: 100%; margin-top: 8px;">Remover Foto</button>`;
+                    } else {
+                        div.innerHTML = `<audio controls src="${this.mediaAtual.dados}"></audio><br><button class="btn btn-secondary" onclick="app.removerMedia()" style="width: 100%; margin-top: 8px;">Remover Áudio</button>`;
+                    }
+
+                    container.appendChild(div);
+                }
+            },
+
+            removerMedia() {
+                this.mediaAtual = null;
+                document.getElementById('media-container').innerHTML = '';
+            },
+
+            salvarGasto() {
+                const data = document.getElementById('data').value;
+                const categoria = document.getElementById('categoria').value;
+                const descricao = document.getElementById('descricao').value;
+                const valor = parseFloat(document.getElementById('valor').value);
+                const fornecedor = document.getElementById('fornecedor').value;
+                const status = document.getElementById('status').value;
+
+                if (!data || !categoria || !descricao || !valor) {
+                    this.mostrarToast('Preecha todos os campos obrigatórios', 'error');
+                    return;
+                }
+
+                const gasto = {
+                    id: Date.now(),
+                    data,
+                    categoria,
+                    descricao,
+                    valor,
+                    fornecedor,
+                    status,
+                    media: this.mediaAtual
+                };
+
+                this.gastos.unshift(gasto);
+                this.salvarDados();
+                this.limparFormulario();
+                this.atualizarUI();
+                this.mostrarToast('Gasto salvo com sucesso!');
+                this.mudarTab('tab-gastos');
+            },
+
+            limparFormulario() {
+                document.getElementById('data').value = new Date().toISOString().split('T')[0];
+                document.getElementById('categoria').value = '';
+                document.getElementById('descricao').value = '';
+                document.getElementById('valor').value = '';
+                document.getElementById('fornecedor').value = '';
+                document.getElementById('status').value = 'Pago';
+                document.querySelectorAll('.category-btn').forEach(b => b.classList.remove('selected'));
+                this.categoriaAtual = null;
+                this.removerMedia();
+            },
+
+            atualizarUI() {
+                this.atualizarListaGastos();
+                this.atualizarEstatisticas();
+            },
+
+            atualizarListaGastos() {
+                const lista = document.getElementById('lista-gastos');
+
+                if (this.gastos.length === 0) {
+                    lista.innerHTML = '<div class="empty-state"><div class="empty-state-icon">📋</div><p>Nenhum gasto registrado ainda</p></div>';
+                    return;
+                }
+
+                lista.innerHTML = this.gastos.map(gasto => `
+                    <div class="list-item">
+                        <div class="list-item-header">
+                            <div>
+                                <div class="list-item-title">${gasto.descricao}</div>
+                                <div class="list-item-meta">${gasto.categoria} • ${new Date(gasto.data).toLocaleDateString('pt-BR')}</div>
+                                ${gasto.fornecedor ? `<div class="list-item-meta">Fornecedor: ${gasto.fornecedor}</div>` : ''}
+                                <div class="list-item-meta" style="margin-top: 4px; ${gasto.status === 'Pendente' ? 'color: #e67e22;' : 'color: #27ae60;'}">${gasto.status}</div>
+                            </div>
+                            <div class="list-item-value">R$ ${gasto.valor.toFixed(2).replace('.', ',')}</div>
+                        </div>
+                        ${gasto.media ? `<div style="margin-top: 8px; text-align: center; font-size: 12px; color: #999;">📎 ${gasto.media.tipo === 'foto' ? 'Foto' : 'Áudio'} anexado</div>` : ''}
+                    </div>
+                `).join('');
+            },
+
+            atualizarEstatisticas() {
+                const total = this.gastos.reduce((sum, g) => sum + g.valor, 0);
+                document.getElementById('total-gasto').textContent = 'R$ ' + total.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                document.getElementById('qtd-gastos').textContent = this.gastos.length;
+            },
+
+            mudarTab(tabId) {
+                document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+                document.querySelectorAll('.action-bar .btn').forEach(el => el.style.opacity = '0.5');
+
+                document.getElementById(tabId).classList.add('active');
+                document.getElementById('btn-' + tabId.split('-')[1]).style.opacity = '1';
+            },
+
+            salvarDados() {
+                const dados = this.gastos.map(g => ({
+                    ...g,
+                    media: g.media ? { tipo: g.media.tipo, dados: g.media.dados } : null
+                }));
+                localStorage.setItem('luci_gastos', JSON.stringify(dados));
+            },
+
+            carregarDados() {
+                const dados = localStorage.getItem('luci_gastos');
+                if (dados) {
+                    this.gastos = JSON.parse(dados);
+                }
+            },
+
+            sincronizar() {
+                this.mostrarToast('Configurar integração com Google Sheets em breve', 'error');
+            },
+
+            exportarCSV() {
+                let csv = 'Data,Categoria,Descrição,Valor,Fornecedor,Status\n';
+                this.gastos.forEach(g => {
+                    csv += `${g.data},"${g.categoria}","${g.descricao}",${g.valor},"${g.fornecedor}","${g.status}"\n`;
+                });
+
+                const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+                const link = document.createElement('a');
+                const url = URL.createObjectURL(blob);
+                link.setAttribute('href', url);
+                link.setAttribute('download', `luci-gastos-${new Date().toISOString().split('T')[0]}.csv`);
+                link.click();
+            },
+
+            limparDados() {
+                if (confirm('Tem certeza? Isso vai deletar todos os gastos registrados.')) {
+                    this.gastos = [];
+                    this.salvarDados();
+                    this.atualizarUI();
+                    this.mostrarToast('Dados apagados');
+                }
+            },
+
+            mostrarToast(mensagem, tipo = 'success') {
+                const toast = document.createElement('div');
+                toast.className = 'toast' + (tipo === 'error' ? ' error' : '');
+                toast.textContent = mensagem;
+                document.body.appendChild(toast);
+
+                setTimeout(() => toast.remove(), 3000);
+            }
+        };
+
+        document.addEventListener('DOMContentLoaded', () => app.init());
+    </script>
+</body>
+</html>
