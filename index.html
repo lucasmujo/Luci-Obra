@@ -522,21 +522,47 @@
                 try {
                     this.audioStream = await navigator.mediaDevices.getUserMedia({ audio: true });
                     this.audioChunks = [];
-                    this.mediaRecorder = new MediaRecorder(this.audioStream);
+
+                    const tiposSuportados = ['audio/mp4', 'audio/webm;codecs=opus', 'audio/webm', 'audio/ogg;codecs=opus'];
+                    let mimeType = '';
+                    for (const tipo of tiposSuportados) {
+                        if (window.MediaRecorder && MediaRecorder.isTypeSupported && MediaRecorder.isTypeSupported(tipo)) {
+                            mimeType = tipo;
+                            break;
+                        }
+                    }
+                    this.audioMimeType = mimeType || 'audio/webm';
+                    this.mediaRecorder = mimeType ? new MediaRecorder(this.audioStream, { mimeType }) : new MediaRecorder(this.audioStream);
 
                     this.mediaRecorder.ondataavailable = (e) => {
                         if (e.data.size > 0) this.audioChunks.push(e.data);
                     };
 
                     this.mediaRecorder.onstop = () => {
-                        const blob = new Blob(this.audioChunks, { type: 'audio/webm' });
-                        const reader = new FileReader();
-                        reader.onload = (event) => {
-                            this.mediaAtual = { tipo: 'audio', dados: event.target.result };
-                            this.exibirPreview();
-                        };
-                        reader.readAsDataURL(blob);
-                        this.audioStream.getTracks().forEach(track => track.stop());
+                        try {
+                            const blob = new Blob(this.audioChunks, { type: this.audioMimeType });
+                            const reader = new FileReader();
+                            reader.onload = (event) => {
+                                this.mediaAtual = { tipo: 'audio', dados: event.target.result };
+                                this.exibirPreview();
+                            };
+                            reader.onerror = () => {
+                                this.mostrarToast('Erro ao processar o áudio gravado. Tente de novo.', 'error');
+                            };
+                            reader.readAsDataURL(blob);
+                        } catch (e2) {
+                            this.mostrarToast('Erro ao processar o áudio gravado.', 'error');
+                        } finally {
+                            if (this.audioStream) this.audioStream.getTracks().forEach(track => track.stop());
+                        }
+                    };
+
+                    this.mediaRecorder.onerror = (e) => {
+                        this.gravando = false;
+                        const btn = document.getElementById('btn-audio');
+                        btn.textContent = '🎤 Gravar Áudio';
+                        btn.classList.remove('btn-danger');
+                        this.mostrarToast('Erro durante a gravação de áudio. Tente de novo.', 'error');
                     };
 
                     this.mediaRecorder.start();
@@ -674,7 +700,25 @@
                     ...g,
                     media: g.media ? { tipo: g.media.tipo, dados: g.media.dados } : null
                 }));
-                localStorage.setItem('luci_gastos', JSON.stringify(dados));
+                try {
+                    localStorage.setItem('luci_gastos', JSON.stringify(dados));
+                } catch (err) {
+                    if (err && (err.name === 'QuotaExceededError' || err.code === 22)) {
+                        if (this.gastos[0] && this.gastos[0].media) {
+                            this.gastos[0].media = null;
+                            try {
+                                localStorage.setItem('luci_gastos', JSON.stringify(this.gastos));
+                                this.mostrarToast('Gasto salvo, mas o áudio/foto era muito grande e não coube no armazenamento. Tente um áudio mais curto.', 'error');
+                                return;
+                            } catch (err2) {
+                                this.gastos.shift();
+                            }
+                        }
+                        this.mostrarToast('Armazenamento do navegador está cheio. Exporte os gastos em CSV e apague os mais antigos.', 'error');
+                    } else {
+                        this.mostrarToast('Erro ao salvar os dados: ' + (err && err.message ? err.message : err), 'error');
+                    }
+                }
             },
 
             carregarDados() {
